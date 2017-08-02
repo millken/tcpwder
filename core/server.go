@@ -3,17 +3,6 @@ package core
 import "github.com/millken/tcpwder/config"
 
 /**
- * Balancer interface
- */
-type Balancer interface {
-
-	/**
-	 * Elect backend based on Balancer implementation
-	 */
-	Elect(Context, []*Backend) (*Backend, error)
-}
-
-/**
  * Server interface
  */
 type Server interface {

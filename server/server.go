@@ -4,6 +4,9 @@ import (
 	"errors"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
+	"github.com/millken/tcpwder/server/tcp"
+	"github.com/millken/tcpwder/server/udp"
 )
 
 func New(name string, cfg config.Server) (core.Server, error) {

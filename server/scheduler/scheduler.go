@@ -1,6 +1,13 @@
 package scheduler
 
-import "time"
+import (
+	"log"
+	"time"
+
+	"github.com/millken/tcpwder/core"
+	"github.com/millken/tcpwder/server/upstream"
+	"github.com/millken/tcpwder/stats/counters"
+)
 
 /**
  * Backend Operation action
@@ -44,11 +51,8 @@ type Scheduler struct {
 	/* Balancer impl */
 	Balancer core.Balancer
 
-	/* Discovery impl */
-	Discovery *discovery.Discovery
-
-	/* Healthcheck impl */
-	Healthcheck *healthcheck.Healthcheck
+	/* Upstream impl */
+	Upstream *upstream.Upstream
 
 	/* ----- backends ------*/
 
@@ -57,9 +61,6 @@ type Scheduler struct {
 
 	/* Current cached backends list (same as backends.list) but preserving order */
 	backendsList []*core.Backend
-
-	/* Stats */
-	StatsHandler *stats.Handler
 
 	/* ----- channels ----- */
 
@@ -78,16 +79,13 @@ type Scheduler struct {
  */
 func (this *Scheduler) Start() {
 
-	log := logging.For("scheduler")
-
-	log.Info("Starting scheduler")
+	log.Printf("[INFO] Starting scheduler")
 
 	this.ops = make(chan Op)
 	this.elect = make(chan ElectRequest)
 	this.stop = make(chan bool)
 
-	this.Discovery.Start()
-	this.Healthcheck.Start()
+	this.Upstream.Start()
 
 	// backends stats pusher ticker
 	backendsPushTicker := time.NewTicker(2 * time.Second)
@@ -99,31 +97,11 @@ func (this *Scheduler) Start() {
 		for {
 			select {
 
-			/* ----- discovery ----- */
+			/* ----- upstream----- */
 
 			// handle newly discovered backends
-			case backends := <-this.Discovery.Discover():
+			case backends := <-this.Upstream.Discover():
 				this.HandleBackendsUpdate(backends)
-				this.Healthcheck.In <- this.Targets()
-				this.StatsHandler.BackendsCounter.In <- this.Targets()
-
-			/* ------ healthcheck ----- */
-
-			// handle backend healthcheck result
-			case checkResult := <-this.Healthcheck.Out:
-				this.HandleBackendLiveChange(checkResult.Target, checkResult.Live)
-
-			/* ----- stats ----- */
-
-			// push current backends to stats handler
-			case <-backendsPushTicker.C:
-				this.StatsHandler.Backends <- this.Backends()
-
-			// handle new bandwidth stats of a backend
-			case bs := <-this.StatsHandler.BackendsCounter.Out:
-				this.HandleBackendStatsChange(bs.Target, &bs)
-
-			/* ----- operations ----- */
 
 			// handle backend operation
 			case op := <-this.ops:
@@ -137,10 +115,9 @@ func (this *Scheduler) Start() {
 
 			// handle scheduler stop
 			case <-this.stop:
-				log.Info("Stopping scheduler")
+				log.Printf("Stopping scheduler")
 				backendsPushTicker.Stop()
-				this.Discovery.Stop()
-				this.Healthcheck.Stop()
+				this.Upstream.Stop()
 				return
 			}
 		}
@@ -180,7 +157,7 @@ func (this *Scheduler) HandleBackendStatsChange(target core.Target, bs *counters
 
 	backend, ok := this.backends[target]
 	if !ok {
-		logging.For("scheduler").Warn("No backends for checkResult ", target)
+		log.Printf("[WARN] No backends for checkResult %s", target)
 		return
 	}
 
@@ -197,7 +174,7 @@ func (this *Scheduler) HandleBackendLiveChange(target core.Target, live bool) {
 
 	backend, ok := this.backends[target]
 	if !ok {
-		logging.For("scheduler").Warn("No backends for checkResult ", target)
+		log.Printf("[WARN] No backends for checkResult %s", target)
 		return
 	}
 
@@ -266,18 +243,16 @@ func (this *Scheduler) HandleOp(op Op) {
 	// backend for this count may be out of discovery pool
 	switch op.op {
 	case IncrementTx:
-		this.StatsHandler.Traffic <- core.ReadWriteCount{CountWrite: op.param.(uint), Target: op.target}
+		//this.StatsHandler.Traffic <- core.ReadWriteCount{CountWrite: op.param.(uint), Target: op.target}
 		return
 	case IncrementRx:
-		this.StatsHandler.Traffic <- core.ReadWriteCount{CountRead: op.param.(uint), Target: op.target}
+		//this.StatsHandler.Traffic <- core.ReadWriteCount{CountRead: op.param.(uint), Target: op.target}
 		return
 	}
 
-	log := logging.For("scheduler")
-
 	backend, ok := this.backends[op.target]
 	if !ok {
-		log.Warn("Trying op ", op.op, " on not tracked target ", op.target)
+		log.Printf("[WARN] Trying op %s %s %s", op.op, " on not tracked target ", op.target)
 		return
 	}
 
@@ -290,7 +265,7 @@ func (this *Scheduler) HandleOp(op Op) {
 	case DecrementConnection:
 		backend.Stats.ActiveConnections--
 	default:
-		log.Warn("Don't know how to handle op ", op.op)
+		log.Printf("Don't know how to handle op %s", op.op)
 	}
 
 }

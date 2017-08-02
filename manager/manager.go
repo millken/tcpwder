@@ -8,6 +8,7 @@ import (
 
 	"github.com/millken/tcpwder/codec"
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/server"
 )
 
@@ -173,44 +174,6 @@ func prepareConfig(name string, server config.Server, defaults config.Connection
 	if server.Bind == "" {
 		return config.Server{}, errors.New("No bind specified")
 	}
-
-	if server.Discovery == nil {
-		return config.Server{}, errors.New("No .discovery specified")
-	}
-
-	if server.Healthcheck == nil {
-		server.Healthcheck = &config.HealthcheckConfig{
-			Kind:     "none",
-			Interval: "0",
-			Timeout:  "0",
-		}
-	}
-
-	switch server.Healthcheck.Kind {
-	case
-		"ping",
-		"exec",
-		"none":
-	default:
-		return config.Server{}, errors.New("Not supported healthcheck type " + server.Healthcheck.Kind)
-	}
-
-	if server.Healthcheck.Interval == "" {
-		server.Healthcheck.Interval = "0"
-	}
-
-	if server.Healthcheck.Timeout == "" {
-		server.Healthcheck.Timeout = "0"
-	}
-
-	if server.Healthcheck.Fails <= 0 {
-		server.Healthcheck.Fails = 1
-	}
-
-	if server.Healthcheck.Passes <= 0 {
-		server.Healthcheck.Passes = 1
-	}
-
 	if server.Sni != nil {
 
 		if server.Sni.ReadTimeout == "" {
@@ -247,18 +210,6 @@ func prepareConfig(name string, server config.Server, defaults config.Connection
 		}
 	}
 
-	if _, err := time.ParseDuration(server.Healthcheck.Timeout); err != nil {
-		return config.Server{}, errors.New("timeout parsing error")
-	}
-
-	if _, err := time.ParseDuration(server.Healthcheck.Interval); err != nil {
-		return config.Server{}, errors.New("interval parsing error")
-	}
-
-	if server.BackendsTls != nil && ((server.BackendsTls.KeyPath == nil) != (server.BackendsTls.CertPath == nil)) {
-		return config.Server{}, errors.New("backend_tls.cert_path and .key_path should be specified together")
-	}
-
 	/* ----- Connections params and overrides ----- */
 
 	/* Protocol */
@@ -272,19 +223,9 @@ func prepareConfig(name string, server config.Server, defaults config.Connection
 		fallthrough
 	case "tcp":
 	case "udp":
-		if server.BackendsTls != nil {
-			return config.Server{}, errors.New("backends_tls should not be enabled for udp protocol")
-		}
 	default:
 		return config.Server{}, errors.New("Not supported protocol " + server.Protocol)
 	}
-
-	/* Healthcheck and protocol match */
-
-	if server.Healthcheck.Kind == "ping" && server.Protocol == "udp" {
-		return config.Server{}, errors.New("Cant use ping healthcheck with udp server")
-	}
-
 	/* Balance */
 	switch server.Balance {
 	case

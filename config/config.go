@@ -27,6 +27,8 @@ type ConnectionOptions struct {
 	BackendConnectionTimeout *string `toml:"backend_connection_timeout" json:"backend_connection_timeout"`
 }
 
+type Upstream []string
+
 /**
  * Server section config
  */
@@ -42,14 +44,14 @@ type Server struct {
 	// weight | leastconn | roundrobin
 	Balance string `toml:"balance" json:"balance"`
 
+	//upstream
+	Upstream []string `toml:"upstream" json:"upstream"`
+
 	// Optional configuration for server name indication
 	Sni *Sni `toml:"sni" json:"sni"`
 
 	// Optional configuration for protocol = tls
 	Tls *Tls `toml:"tls" json:"tls"`
-
-	// Optional configuration for backend_tls_enabled = true
-	BackendsTls *BackendsTls `toml:"backends_tls" json:"backends_tls"`
 
 	// Optional configuration for protocol = udp
 	Udp *Udp `toml:"udp" json:"udp"`

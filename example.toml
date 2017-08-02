@@ -1,0 +1,37 @@
+#
+# Logging configuration
+#
+[logging]
+level = "info"   # "debug" | "info" | "warn" | "error"
+output = "stdout" # "stdout" | "stderr" | "/path/to/gobetween.log"
+
+
+#
+# Default values for server configuration, may be overriden in [servers] sections.
+# All "duration" fields (for examole, postfixed with '_timeout') have the following format:
+# <int><duration> where duration can be one of 'ms', 's', 'm', 'h'.
+# Examples: "5s", "1m", "500ms", etc. "0" value means no limit
+#
+[defaults]
+max_connections = 0              # Maximum simultaneous connections to the server
+client_idle_timeout = "0"        # Client inactivity duration before forced connection drop
+backend_idle_timeout = "0"       # Backend inactivity duration before forced connection drop
+backend_connection_timeout = "0" # Backend connection timeout (ignored in udp)
+
+
+#
+# Servers contains as many [server.<name>] sections as needed.
+#
+[servers]
+
+# ---------- tcp example ----------- #
+
+[servers.sample]
+protocol = "tcp"
+bind = "localhost:3000"
+balance = "roundrobin"
+upstream = [
+      "localhost:8080",
+      "localhost:11300"
+  ]
+
