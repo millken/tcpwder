@@ -53,6 +53,9 @@ type Server struct {
 	// Optional configuration for protocol = tls
 	Tls *Tls `toml:"tls" json:"tls"`
 
+	// Optional configuration for backend_tls_enabled = true
+	BackendsTls *BackendsTls `toml:"backends_tls" json:"backends_tls"`
+
 	// Optional configuration for protocol = udp
 	Udp *Udp `toml:"udp" json:"udp"`
 
@@ -90,6 +93,14 @@ type tlsCommon struct {
 type Tls struct {
 	CertPath string `toml:"cert_path" json:"cert_path"`
 	KeyPath  string `toml:"key_path" json:"key_path"`
+	tlsCommon
+}
+
+type BackendsTls struct {
+	IgnoreVerify   bool    `toml:"ignore_verify" json:"ignore_verify"`
+	RootCaCertPath *string `toml:"root_ca_cert_path" json:"root_ca_cert_path"`
+	CertPath       *string `toml:"cert_path" json:"cert_path"`
+	KeyPath        *string `toml:"key_path" json:"key_path"`
 	tlsCommon
 }
 

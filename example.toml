@@ -29,9 +29,8 @@ backend_connection_timeout = "0" # Backend connection timeout (ignored in udp)
 [servers.sample]
 protocol = "tcp"
 bind = "localhost:3000"
-balance = "roundrobin"
 upstream = [
-      "localhost:8080",
-      "localhost:11300"
+      "localhost:8000",
+      "localhost:8001"
   ]
 

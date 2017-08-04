@@ -2,6 +2,8 @@ package tcp
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"log"
 	"net"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/millken/tcpwder/server/upstream"
 	"github.com/millken/tcpwder/tls/sni"
 	"github.com/millken/tcpwder/utils"
+	tlsutil "github.com/millken/tcpwder/utils/tls"
 )
 
 type Server struct {
@@ -40,6 +43,9 @@ type Server struct {
 
 	/* Stop channel */
 	stop chan bool
+
+	/* Tls config used to connect to backends */
+	backendsTlsConfg *tls.Config
 }
 
 /**
@@ -47,6 +53,7 @@ type Server struct {
  */
 func New(name string, cfg config.Server) (*Server, error) {
 
+	var err error
 	// Create server
 	server := &Server{
 		name:       name,
@@ -59,6 +66,14 @@ func New(name string, cfg config.Server) (*Server, error) {
 			Balancer: balance.New(cfg.Sni, cfg.Balance),
 			Upstream: upstream.New(cfg.Upstream),
 		},
+	}
+
+	/* Add backend tls config if needed */
+	if cfg.BackendsTls != nil {
+		server.backendsTlsConfg, err = prepareBackendsTlsConfig(cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Printf("Creating '%s': %s %s", name, cfg.Bind, cfg.Balance)
@@ -246,8 +261,14 @@ func (this *Server) handle(ctx *core.TcpContext) {
 	/* Connect to backend */
 	var backendConn net.Conn
 
-	backendConn, err = net.DialTimeout("tcp", backend.Address(), utils.ParseDurationOrDefault(*this.cfg.BackendConnectionTimeout, 0))
+	if this.cfg.BackendsTls != nil {
+		backendConn, err = tls.DialWithDialer(&net.Dialer{
+			Timeout: utils.ParseDurationOrDefault(*this.cfg.BackendConnectionTimeout, 0),
+		}, "tcp", backend.Address(), this.backendsTlsConfg)
 
+	} else {
+		backendConn, err = net.DialTimeout("tcp", backend.Address(), utils.ParseDurationOrDefault(*this.cfg.BackendConnectionTimeout, 0))
+	}
 	if err != nil {
 		this.scheduler.IncrementRefused(*backend)
 		log.Printf("[ERROR] %s", err)
@@ -273,4 +294,51 @@ func (this *Server) handle(ctx *core.TcpContext) {
 		}
 	}
 	log.Printf("[DEBUG] End %s -> %s", clientConn.RemoteAddr(), this.listener.Addr())
+}
+
+func prepareBackendsTlsConfig(cfg config.Server) (*tls.Config, error) {
+
+	var err error
+
+	result := &tls.Config{
+		InsecureSkipVerify:       cfg.BackendsTls.IgnoreVerify,
+		CipherSuites:             tlsutil.MapCiphers(cfg.BackendsTls.Ciphers),
+		PreferServerCipherSuites: cfg.BackendsTls.PreferServerCiphers,
+		MinVersion:               tlsutil.MapVersion(cfg.BackendsTls.MinVersion),
+		MaxVersion:               tlsutil.MapVersion(cfg.BackendsTls.MaxVersion),
+		SessionTicketsDisabled:   !cfg.BackendsTls.SessionTickets,
+	}
+
+	if cfg.BackendsTls.CertPath != nil && cfg.BackendsTls.KeyPath != nil {
+
+		var crt tls.Certificate
+
+		if crt, err = tls.LoadX509KeyPair(*cfg.BackendsTls.CertPath, *cfg.BackendsTls.KeyPath); err != nil {
+			log.Printf("[ERROR] prepareBackendsTls : %s", err)
+			return nil, err
+		}
+
+		result.Certificates = []tls.Certificate{crt}
+	}
+
+	if cfg.BackendsTls.RootCaCertPath != nil {
+
+		var caCertPem []byte
+
+		if caCertPem, err = ioutil.ReadFile(*cfg.BackendsTls.RootCaCertPath); err != nil {
+			log.Printf("[ERROR] %s", err)
+			return nil, err
+		}
+
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCertPem); !ok {
+			log.Printf("[ERROR] Unable to load root pem")
+		}
+
+		result.RootCAs = caCertPool
+
+	}
+
+	return result, nil
+
 }
