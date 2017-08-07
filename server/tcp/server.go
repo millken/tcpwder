@@ -76,7 +76,7 @@ func New(name string, cfg config.Server) (*Server, error) {
 		}
 	}
 
-	log.Printf("Creating '%s': %s %s", name, cfg.Bind, cfg.Balance)
+	log.Printf("[INFO] Creating '%s': %s %s", name, cfg.Bind, cfg.Balance)
 
 	return server, nil
 }
