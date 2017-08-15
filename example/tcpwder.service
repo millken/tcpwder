@@ -1,0 +1,17 @@
+# /usr/lib/systemd/system/tcpwder.service
+
+[Unit]
+Description=Simple tcp/udp 4-layer forwarding
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/tcpwder -c /etc/tcpwder.toml
+Restart=always
+User=root
+Group=root
+LimitNOFILE=1024
+LimitFSIZE=infinity
+
+[Install]
+WantedBy=multi-user.target

@@ -3,7 +3,7 @@
 #
 [logging]
 level = "info"   # "debug" | "info" | "warn" | "error"
-output = "./tcpwder.log" # "stdout" | "stderr" | "/path/to/tcpwder.log"
+output = "stdout" # "stdout" | "stderr" | "/path/to/tcpwder.log"
 
 
 #
@@ -28,17 +28,9 @@ backend_connection_timeout = "0" # Backend connection timeout (ignored in udp)
 
 [servers.sample]
 protocol = "tcp"
-bind = "localhost:3000"
+bind = "localhost:3306"
 upstream = [
-      "localhost:8000",
-      "localhost:8001"
+      "172.17.0.2:3306",
   ]
 
-[servers.dns]
-protocol = "udp"
-bind = "localhost:53"
-balance = "roundrobin"
-upstream = [
-      "8.8.8.8:53",
-      "8.8.4.4:53"
-  ]
+
