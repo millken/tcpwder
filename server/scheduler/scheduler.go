@@ -6,6 +6,7 @@ import (
 
 	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/server/upstream"
+	"github.com/millken/tcpwder/stats"
 	"github.com/millken/tcpwder/stats/counters"
 )
 
@@ -61,6 +62,9 @@ type Scheduler struct {
 
 	/* Current cached backends list (same as backends.list) but preserving order */
 	backendsList []*core.Backend
+
+	/* Stats */
+	StatsHandler *stats.Handler
 
 	/* ----- channels ----- */
 
@@ -243,10 +247,10 @@ func (this *Scheduler) HandleOp(op Op) {
 	// backend for this count may be out of discovery pool
 	switch op.op {
 	case IncrementTx:
-		//this.StatsHandler.Traffic <- core.ReadWriteCount{CountWrite: op.param.(uint), Target: op.target}
+		this.StatsHandler.Traffic <- core.ReadWriteCount{CountWrite: op.param.(uint), Target: op.target}
 		return
 	case IncrementRx:
-		//this.StatsHandler.Traffic <- core.ReadWriteCount{CountRead: op.param.(uint), Target: op.target}
+		this.StatsHandler.Traffic <- core.ReadWriteCount{CountRead: op.param.(uint), Target: op.target}
 		return
 	}
 

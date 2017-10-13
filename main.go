@@ -4,21 +4,44 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/logutils"
 
+	"github.com/millken/tcpwder/api"
 	"github.com/millken/tcpwder/codec"
 	"github.com/millken/tcpwder/config"
 	"github.com/millken/tcpwder/manager"
 )
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var (
 	flagConfigFile = flag.String("c", "./config.json", "Path to config.")
 )
+
+/**
+ * Initialize package
+ */
+func init() {
+
+	// Set GOMAXPROCS if not set
+	if os.Getenv("GOMAXPROCS") == "" {
+		runtime.GOMAXPROCS(runtime.NumCPU())
+	}
+
+	// Init random seed
+	rand.Seed(time.Now().UnixNano())
+
+	// Save info
+	config.Version = version
+	config.StartTime = time.Now()
+
+}
 
 func main() {
 	log.Printf("tcpwder v%s // by millken\n", version)
@@ -59,6 +82,9 @@ func main() {
 
 	log.SetOutput(filter)
 	//log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Start API
+	go api.Start(cfg.Api)
 
 	manager.Initialize(cfg)
 	<-(chan string)(nil)

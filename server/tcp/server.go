@@ -13,6 +13,7 @@ import (
 	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/server/scheduler"
 	"github.com/millken/tcpwder/server/upstream"
+	"github.com/millken/tcpwder/stats"
 	"github.com/millken/tcpwder/tls/sni"
 	"github.com/millken/tcpwder/utils"
 	tlsutil "github.com/millken/tcpwder/utils/tls"
@@ -35,6 +36,9 @@ type Server struct {
 	/* Current clients connection */
 	clients map[string]net.Conn
 
+	/* Stats handler */
+	statsHandler *stats.Handler
+
 	/* Channel for new connections */
 	connect chan (*core.TcpContext)
 
@@ -53,18 +57,23 @@ type Server struct {
  */
 func New(name string, cfg config.Server) (*Server, error) {
 
-	var err error
+	var err error = nil
+
+	statsHandler := stats.NewHandler(name)
+
 	// Create server
 	server := &Server{
-		name:       name,
-		cfg:        cfg,
-		stop:       make(chan bool),
-		disconnect: make(chan net.Conn),
-		connect:    make(chan *core.TcpContext),
-		clients:    make(map[string]net.Conn),
+		name:         name,
+		cfg:          cfg,
+		stop:         make(chan bool),
+		disconnect:   make(chan net.Conn),
+		connect:      make(chan *core.TcpContext),
+		clients:      make(map[string]net.Conn),
+		statsHandler: statsHandler,
 		scheduler: scheduler.Scheduler{
-			Balancer: balance.New(cfg.Sni, cfg.Balance),
-			Upstream: upstream.New(cfg.Upstream),
+			Balancer:     balance.New(cfg.Sni, cfg.Balance),
+			Upstream:     upstream.New(cfg.Upstream),
+			StatsHandler: statsHandler,
 		},
 	}
 
@@ -104,6 +113,8 @@ func (this *Server) Start() error {
 				this.HandleClientConnect(ctx)
 
 			case <-this.stop:
+				this.scheduler.Stop()
+				this.statsHandler.Stop()
 				if this.listener != nil {
 					this.listener.Close()
 					for _, conn := range this.clients {
@@ -115,6 +126,9 @@ func (this *Server) Start() error {
 			}
 		}
 	}()
+
+	// Start stats handler
+	this.statsHandler.Start()
 
 	// Start scheduler
 	this.scheduler.Start()
@@ -134,6 +148,7 @@ func (this *Server) Start() error {
 func (this *Server) HandleClientDisconnect(client net.Conn) {
 	client.Close()
 	delete(this.clients, client.RemoteAddr().String())
+	this.statsHandler.Connections <- uint(len(this.clients))
 }
 
 /**
@@ -149,6 +164,7 @@ func (this *Server) HandleClientConnect(ctx *core.TcpContext) {
 	}
 
 	this.clients[client.RemoteAddr().String()] = client
+	this.statsHandler.Connections <- uint(len(this.clients))
 	go func() {
 		this.handle(ctx)
 		this.disconnect <- client

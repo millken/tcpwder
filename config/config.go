@@ -5,6 +5,7 @@ package config
  */
 type Config struct {
 	Logging  LoggingConfig     `toml:"logging" json:"logging"`
+	Api      ApiConfig         `toml:"api" json:"api"`
 	Defaults ConnectionOptions `toml:"defaults" json:"defaults"`
 	Servers  map[string]Server `toml:"servers" json:"servers"`
 }
@@ -15,6 +16,33 @@ type Config struct {
 type LoggingConfig struct {
 	Level  string `toml:"level" json:"level"`
 	Output string `toml:"output" json:"output"`
+}
+
+/**
+ * Api config section
+ */
+type ApiConfig struct {
+	Enabled   bool                `toml:"enabled" json:"enabled"`
+	Bind      string              `toml:"bind" json:"bind"`
+	BasicAuth *ApiBasicAuthConfig `toml:"basic_auth" json:"basic_auth"`
+	Tls       *ApiTlsConfig       `toml:"tls" json:"tls"`
+	Cors      bool                `toml:"cors" json:"cors"`
+}
+
+/**
+ * Api Basic Auth Config
+ */
+type ApiBasicAuthConfig struct {
+	Login    string `toml:"login" json:"login"`
+	Password string `toml:"password" json:"password"`
+}
+
+/**
+ * Api TLS server Config
+ */
+type ApiTlsConfig struct {
+	CertPath string `toml:"cert_path" json:"cert_path"`
+	KeyPath  string `toml:"key_path" json:"key_path"`
 }
 
 /**
