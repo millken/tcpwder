@@ -11,6 +11,7 @@ import (
 	"github.com/millken/tcpwder/balance"
 	"github.com/millken/tcpwder/config"
 	"github.com/millken/tcpwder/core"
+	"github.com/millken/tcpwder/server/filter"
 	"github.com/millken/tcpwder/server/scheduler"
 	"github.com/millken/tcpwder/server/upstream"
 	"github.com/millken/tcpwder/stats"
@@ -50,6 +51,9 @@ type Server struct {
 
 	/* Tls config used to connect to backends */
 	backendsTlsConfg *tls.Config
+
+	/* filter */
+	filter *filter.Filter
 }
 
 /**
@@ -75,6 +79,7 @@ func New(name string, cfg config.Server) (*Server, error) {
 			Upstream:     upstream.New(cfg.Upstream),
 			StatsHandler: statsHandler,
 		},
+		filter: filter.New(cfg),
 	}
 
 	/* Add backend tls config if needed */
@@ -115,6 +120,7 @@ func (this *Server) Start() error {
 			case <-this.stop:
 				this.scheduler.Stop()
 				this.statsHandler.Stop()
+				this.filter.Stop()
 				if this.listener != nil {
 					this.listener.Close()
 					for _, conn := range this.clients {
@@ -132,6 +138,9 @@ func (this *Server) Start() error {
 
 	// Start scheduler
 	this.scheduler.Start()
+
+	// Start filter
+	this.filter.Start()
 
 	// Start listening
 	if err := this.Listen(); err != nil {
@@ -156,6 +165,11 @@ func (this *Server) HandleClientDisconnect(client net.Conn) {
  */
 func (this *Server) HandleClientConnect(ctx *core.TcpContext) {
 	client := ctx.Conn
+	if err := this.filter.HandleClientConnect(client); err != nil {
+		log.Printf("[WARN] filter HandleClientConnect [%s] : %s", this.name, err)
+		client.Close()
+		return
+	}
 
 	if *this.cfg.MaxConnections != 0 && len(this.clients) >= *this.cfg.MaxConnections {
 		log.Printf("[WARN] Too many connections to %s", this.cfg.Bind)

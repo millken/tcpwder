@@ -1,0 +1,29 @@
+[api]
+enabled = true
+bind = ":8000"
+
+[logging]
+level = "info"
+output = "stdout" 
+
+#
+[defaults]
+max_connections = 0
+client_idle_timeout = "0" 
+backend_idle_timeout = "0"
+backend_connection_timeout = "0"
+
+
+[servers]
+
+
+[servers.sample]
+protocol = "tcp"
+bind = "localhost:1880"
+upstream = [
+      "localhost:1883",
+  ]
+
+[servers.sample.limit_connection]
+
+max_connections = 2

@@ -87,8 +87,8 @@ type Server struct {
 	// Optional configuration for protocol = udp
 	Udp *Udp `toml:"udp" json:"udp"`
 
-	// Access configuration
-	Access *AccessConfig `toml:"access" json:"access"`
+	// Filter limit_connection_filter configuration
+	LimitConnection *FilterLimitConnectionConfig `toml:"limit_connection" json:"limit_connection"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
@@ -142,11 +142,10 @@ type Udp struct {
 }
 
 /**
- * Access configuration
+ * limit_connection_filter configuration
  */
-type AccessConfig struct {
-	Default string   `toml:"default" json:"default"`
-	Rules   []string `toml:"rules" json:"rules"`
+type FilterLimitConnectionConfig struct {
+	MaxConnections int `toml:"max_connections" json:"max_connections"`
 }
 
 /**
