@@ -87,8 +87,13 @@ type Server struct {
 	// Optional configuration for protocol = udp
 	Udp *Udp `toml:"udp" json:"udp"`
 
-	// Filter limit_connection_filter configuration
-	LimitConnection *FilterLimitConnectionConfig `toml:"limit_connection" json:"limit_connection"`
+	// Filter limit_max_connection_filter configuration
+	MaxConnections *int `toml:"max_connections" json:"max_connections"`
+
+	// Filter limit_perip_connection_filter configuration
+	PerIpConnections *uint `toml:"per_ip_connections" json:"per_ip_connections"`
+
+	LimitReconnectRate *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
@@ -142,10 +147,11 @@ type Udp struct {
 }
 
 /**
- * limit_connection_filter configuration
+ * filter limit_reconnect_rate configuration
  */
-type FilterLimitConnectionConfig struct {
-	MaxConnections int `toml:"max_connections" json:"max_connections"`
+type LimitReconnectRate struct {
+	Interval   string `toml:"interval" json:"interval"`
+	Reconnects int    `toml:"reconnects" json:"reconnects"`
 }
 
 /**

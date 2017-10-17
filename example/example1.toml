@@ -21,9 +21,11 @@ backend_connection_timeout = "0"
 protocol = "tcp"
 bind = "localhost:1880"
 upstream = [
-      "localhost:1883",
+      "localhost:80",
   ]
+max_connections = 8
+#per_ip_connections = 5
 
-[servers.sample.limit_connection]
-
-max_connections = 2
+[servers.sample.limit_reconnect_rate]
+interval = "3s"
+reconnects = 23333

@@ -11,6 +11,7 @@ import (
 	"github.com/millken/tcpwder/balance"
 	"github.com/millken/tcpwder/config"
 	"github.com/millken/tcpwder/core"
+	"github.com/millken/tcpwder/firewall"
 	"github.com/millken/tcpwder/server/filter"
 	"github.com/millken/tcpwder/server/scheduler"
 	"github.com/millken/tcpwder/server/upstream"
@@ -155,6 +156,7 @@ func (this *Server) Start() error {
  * Handle client disconnection
  */
 func (this *Server) HandleClientDisconnect(client net.Conn) {
+	this.filter.HandleClientDisconnect(client)
 	client.Close()
 	delete(this.clients, client.RemoteAddr().String())
 	this.statsHandler.Connections <- uint(len(this.clients))
@@ -165,19 +167,27 @@ func (this *Server) HandleClientDisconnect(client net.Conn) {
  */
 func (this *Server) HandleClientConnect(ctx *core.TcpContext) {
 	client := ctx.Conn
+	host, _, _ := net.SplitHostPort(client.RemoteAddr().String())
+
+	if !firewall.Allows(host) {
+		log.Printf("[WARN] firewall deny: %s", host)
+		client.Close()
+		return
+	}
 	if err := this.filter.HandleClientConnect(client); err != nil {
-		log.Printf("[WARN] filter HandleClientConnect [%s] : %s", this.name, err)
+		log.Printf("[WARN] handle client connect: %s", host)
 		client.Close()
 		return
 	}
+	/*
+		if *this.cfg.MaxConnections != 0 && len(this.clients) >= *this.cfg.MaxConnections {
+			log.Printf("[WARN] Too many connections to %s", this.cfg.Bind)
+			client.Close()
+			return
+		}
 
-	if *this.cfg.MaxConnections != 0 && len(this.clients) >= *this.cfg.MaxConnections {
-		log.Printf("[WARN] Too many connections to %s", this.cfg.Bind)
-		client.Close()
-		return
-	}
-
-	this.clients[client.RemoteAddr().String()] = client
+		this.clients[client.RemoteAddr().String()] = client
+	*/
 	this.statsHandler.Connections <- uint(len(this.clients))
 	go func() {
 		this.handle(ctx)

@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/firewall"
 )
 
 type FilterInterface interface {
@@ -12,7 +13,7 @@ type FilterInterface interface {
 	Connect(client net.Conn) error
 	//Read(ctx *core.TcpContext)
 	//Receive(ctx *core.TcpContext)
-	//Disconnect(client net.Conn)
+	Disconnect(client net.Conn)
 }
 
 var filters = make(map[string]func() interface{})
@@ -70,8 +71,16 @@ func (this *Filter) Stop() {
 func (this *Filter) HandleClientConnect(client net.Conn) error {
 	for _, filter := range this.filters {
 		if err := filter.Connect(client); err != nil {
+			host, _, _ := net.SplitHostPort(client.RemoteAddr().String())
+			firewall.SetDeny(host, 3600)
 			return err
 		}
 	}
 	return nil
+}
+
+func (this *Filter) HandleClientDisconnect(client net.Conn) {
+	for _, filter := range this.filters {
+		filter.Disconnect(client)
+	}
 }
