@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/millken/tcpwder/core"
+	"github.com/millken/tcpwder/firewall"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
  * Perform copy/proxy data from 'from' to 'to' socket, counting r/w stats and
  * dropping connection if timeout exceeded
  */
-func proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWriteCount {
+func proxy(to net.Conn, from net.Conn, timeout time.Duration, direction string) <-chan core.ReadWriteCount {
 
 	stats := make(chan core.ReadWriteCount)
 	outStats := make(chan core.ReadWriteCount)
@@ -41,6 +42,18 @@ func proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWr
 		for {
 			select {
 			case <-ticker.C:
+				host := ""
+				if direction == "->" {
+					host, _, _ = net.SplitHostPort(to.RemoteAddr().String())
+				} else {
+					host, _, _ = net.SplitHostPort(from.RemoteAddr().String())
+				}
+				if !firewall.Allows(host) {
+					to.Close()
+					from.Close()
+					close(outStats)
+					return
+				}
 				if !rwcBuffer.IsZero() {
 					outStats <- rwcBuffer
 				}

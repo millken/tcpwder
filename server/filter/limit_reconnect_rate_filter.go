@@ -13,6 +13,7 @@ type LimitReconnectRateFilter struct {
 	reconnects int
 	interval   time.Duration
 	clients    map[string]int
+	stop       chan bool
 }
 
 func (this *LimitReconnectRateFilter) Init(cfg config.Server) bool {
@@ -27,6 +28,9 @@ func (this *LimitReconnectRateFilter) Init(cfg config.Server) bool {
 				select {
 				case <-ticker.C:
 					this.clients = make(map[string]int)
+				case <-this.stop:
+					ticker.Stop()
+					return
 				}
 			}
 		}()
@@ -48,6 +52,10 @@ func (this *LimitReconnectRateFilter) Connect(client net.Conn) error {
 func (this *LimitReconnectRateFilter) Disconnect(client net.Conn) {
 	host, _, _ := net.SplitHostPort(client.RemoteAddr().String())
 	this.clients[host] += 1
+}
+
+func (this *LimitReconnectRateFilter) Stop() {
+	close(this.stop)
 }
 
 func init() {

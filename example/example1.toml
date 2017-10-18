@@ -23,7 +23,7 @@ bind = "localhost:1880"
 upstream = [
       "localhost:80",
   ]
-max_connections = 8
+max_connections = 80
 #per_ip_connections = 5
 
 [servers.sample.limit_reconnect_rate]

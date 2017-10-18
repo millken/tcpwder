@@ -33,6 +33,9 @@ func (this *LimitMaxConnectionFilter) Disconnect(client net.Conn) {
 	delete(this.clients, client.RemoteAddr().String())
 }
 
+func (this *LimitMaxConnectionFilter) Stop() {
+}
+
 func init() {
 	RegisterFilter("limit_max_connection", func() interface{} {
 		return new(LimitMaxConnectionFilter)

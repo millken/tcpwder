@@ -14,6 +14,7 @@ type FilterInterface interface {
 	//Read(ctx *core.TcpContext)
 	//Receive(ctx *core.TcpContext)
 	Disconnect(client net.Conn)
+	Stop()
 }
 
 var filters = make(map[string]func() interface{})
@@ -65,6 +66,9 @@ func (this *Filter) Start() {
 }
 
 func (this *Filter) Stop() {
+	for _, filter := range this.filters {
+		filter.Stop()
+	}
 	this.stop <- true
 }
 

@@ -41,6 +41,9 @@ func (this *LimitPerIPConnectionFilter) Disconnect(client net.Conn) {
 	}
 }
 
+func (this *LimitPerIPConnectionFilter) Stop() {
+}
+
 func init() {
 	RegisterFilter("limit_perip_connection", func() interface{} {
 		return new(LimitPerIPConnectionFilter)
