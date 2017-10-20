@@ -319,18 +319,28 @@ func (this *Server) handle(ctx *core.TcpContext) {
 
 	/* Stat proxying */
 	log.Printf("[DEBUG] Begin %s%s%s%s%s", clientConn.RemoteAddr(), " -> ", this.listener.Addr(), " -> ", backendConn.RemoteAddr())
-	cs := proxy(clientConn, backendConn, utils.ParseDurationOrDefault(*this.cfg.BackendIdleTimeout, 0), "->")
-	bs := proxy(backendConn, clientConn, utils.ParseDurationOrDefault(*this.cfg.ClientIdleTimeout, 0), "<-")
+	cs := proxy(clientConn, backendConn, utils.ParseDurationOrDefault(*this.cfg.BackendIdleTimeout, 0))
+	bs := proxy(backendConn, clientConn, utils.ParseDurationOrDefault(*this.cfg.ClientIdleTimeout, 0))
 
 	isTx, isRx := true, true
+	ticker := time.NewTicker(1 * time.Second)
 	for isTx || isRx {
 		select {
+		case <-ticker.C:
+			if !firewall.IsAllowClient(clientConn) {
+				clientConn.Close()
+				backendConn.Close()
+				ticker.Stop()
+				break
+			}
 		case s, ok := <-cs:
 			isRx = ok
 			this.scheduler.IncrementRx(*backend, s.CountWrite)
+			this.filter.HandleClientRead(clientConn, s)
 		case s, ok := <-bs:
 			isTx = ok
 			this.scheduler.IncrementTx(*backend, s.CountWrite)
+			this.filter.HandleClientWrite(clientConn, s)
 		}
 	}
 	log.Printf("[DEBUG] End %s -> %s", clientConn.RemoteAddr(), this.listener.Addr())

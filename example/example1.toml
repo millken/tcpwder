@@ -29,3 +29,8 @@ max_connections = 80
 [servers.sample.limit_reconnect_rate]
 interval = "3s"
 reconnects = 23333
+
+[servers.sample.limit_per_ip_rate]
+interval = "10s"
+readbytes = 10
+writebytes = 500

@@ -6,15 +6,14 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 var requestCount uint64
-var totalPingsPerConnection uint64 = 100
-var concurrentConnections uint64 = 1
+var totalPingsPerConnection uint64 = 1000
+var concurrentConnections uint64 = 10
 var totalPings = concurrentConnections * totalPingsPerConnection
 
 func monitor(done chan bool) chan bool {
@@ -74,7 +73,7 @@ func (c *client) writeLoop(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	wr := bufio.NewWriterSize(c.conn, 65536)
-	outBuf := []byte("Ping")
+	outBuf := []byte("ping")
 	// var buffered int
 
 	for atomic.LoadUint64(&c.sent) < totalPingsPerConnection {
@@ -87,6 +86,7 @@ func (c *client) writeLoop(wg *sync.WaitGroup) {
 			return
 		}
 		atomic.AddUint64(&c.sent, 1)
+		//time.Sleep(100 * time.Millisecond)
 	}
 	wr.Flush()
 	fmt.Printf("total sent: %d\r\n", c.sent)
@@ -122,7 +122,7 @@ func NewClient(wg *sync.WaitGroup) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(8)
+	//runtime.GOMAXPROCS(8)
 
 	var wg sync.WaitGroup
 	done := make(chan bool)

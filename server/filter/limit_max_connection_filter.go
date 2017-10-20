@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
 )
 
 type LimitMaxConnectionFilter struct {
@@ -31,6 +32,12 @@ func (this *LimitMaxConnectionFilter) Connect(client net.Conn) error {
 
 func (this *LimitMaxConnectionFilter) Disconnect(client net.Conn) {
 	delete(this.clients, client.RemoteAddr().String())
+}
+
+func (this *LimitMaxConnectionFilter) Read(client net.Conn, rwc core.ReadWriteCount) {
+}
+
+func (this *LimitMaxConnectionFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
 func (this *LimitMaxConnectionFilter) Stop() {

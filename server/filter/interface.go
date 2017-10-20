@@ -5,14 +5,15 @@ import (
 	"net"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/firewall"
 )
 
 type FilterInterface interface {
 	Init(cf config.Server) bool
 	Connect(client net.Conn) error
-	//Read(ctx *core.TcpContext)
-	//Receive(ctx *core.TcpContext)
+	Read(client net.Conn, rwc core.ReadWriteCount)
+	Write(client net.Conn, rwc core.ReadWriteCount)
 	Disconnect(client net.Conn)
 	Stop()
 }
@@ -86,5 +87,17 @@ func (this *Filter) HandleClientConnect(client net.Conn) error {
 func (this *Filter) HandleClientDisconnect(client net.Conn) {
 	for _, filter := range this.filters {
 		filter.Disconnect(client)
+	}
+}
+
+func (this *Filter) HandleClientWrite(client net.Conn, rwc core.ReadWriteCount) {
+	for _, filter := range this.filters {
+		filter.Write(client, rwc)
+	}
+}
+
+func (this *Filter) HandleClientRead(client net.Conn, rwc core.ReadWriteCount) {
+	for _, filter := range this.filters {
+		filter.Read(client, rwc)
 	}
 }

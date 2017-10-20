@@ -1,6 +1,10 @@
 package firewall
 
-import ttlmap "github.com/leprosus/golang-ttl-map"
+import (
+	"net"
+
+	ttlmap "github.com/leprosus/golang-ttl-map"
+)
 
 var ttlMap ttlmap.Heap
 
@@ -36,6 +40,15 @@ func Del(ip, match string) {
 }
 
 func Allows(ip string) bool {
+	value := ttlMap.Get(ip)
+	if value == "deny" {
+		return false
+	}
+	return true
+}
+
+func IsAllowClient(client net.Conn) bool {
+	ip, _, _ := net.SplitHostPort(client.RemoteAddr().String())
 	value := ttlMap.Get(ip)
 	if value == "deny" {
 		return false

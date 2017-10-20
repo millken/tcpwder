@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
 )
 
 type LimitPerIPConnectionFilter struct {
@@ -39,6 +40,12 @@ func (this *LimitPerIPConnectionFilter) Disconnect(client net.Conn) {
 			delete(this.clients, host)
 		}
 	}
+}
+
+func (this *LimitPerIPConnectionFilter) Read(client net.Conn, rwc core.ReadWriteCount) {
+}
+
+func (this *LimitPerIPConnectionFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
 func (this *LimitPerIPConnectionFilter) Stop() {

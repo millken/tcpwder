@@ -94,6 +94,7 @@ type Server struct {
 	PerIpConnections *uint `toml:"per_ip_connections" json:"per_ip_connections"`
 
 	LimitReconnectRate *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
+	LimitPeripRate     *LimitPeripRate     `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
@@ -152,6 +153,15 @@ type Udp struct {
 type LimitReconnectRate struct {
 	Interval   string `toml:"interval" json:"interval"`
 	Reconnects int    `toml:"reconnects" json:"reconnects"`
+}
+
+/**
+ * filter limit_per_ip_rate configuration
+ */
+type LimitPeripRate struct {
+	Interval   string `toml:"interval" json:"interval"`
+	ReadBytes  uint   `toml:"readbytes" json:"readbytes"`
+	WriteBytes uint   `toml:"writebytes" json:"writebytes"`
 }
 
 /**

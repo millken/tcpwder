@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/millken/tcpwder/config"
+	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/utils"
 )
 
@@ -52,6 +53,12 @@ func (this *LimitReconnectRateFilter) Connect(client net.Conn) error {
 func (this *LimitReconnectRateFilter) Disconnect(client net.Conn) {
 	host, _, _ := net.SplitHostPort(client.RemoteAddr().String())
 	this.clients[host] += 1
+}
+
+func (this *LimitReconnectRateFilter) Read(client net.Conn, rwc core.ReadWriteCount) {
+}
+
+func (this *LimitReconnectRateFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
 func (this *LimitReconnectRateFilter) Stop() {
