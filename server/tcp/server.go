@@ -324,13 +324,13 @@ func (this *Server) handle(ctx *core.TcpContext) {
 
 	isTx, isRx := true, true
 	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
 	for isTx || isRx {
 		select {
 		case <-ticker.C:
 			if !firewall.IsAllowClient(clientConn) {
 				clientConn.Close()
 				backendConn.Close()
-				ticker.Stop()
 				break
 			}
 		case s, ok := <-cs:
