@@ -16,6 +16,7 @@ import (
 	"github.com/millken/tcpwder/codec"
 	"github.com/millken/tcpwder/config"
 	"github.com/millken/tcpwder/manager"
+	"github.com/millken/tcpwder/utils"
 )
 
 const version = "1.0.1"
@@ -82,6 +83,13 @@ func main() {
 
 	log.SetOutput(filter)
 	//log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	if *cfg.Defaults.ChinaIpdbPath != "" {
+		err = utils.LoadCNIpDB(*cfg.Defaults.ChinaIpdbPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	// Start API
 	go api.Start(cfg.Api)

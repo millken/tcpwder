@@ -53,6 +53,7 @@ type ConnectionOptions struct {
 	ClientIdleTimeout        *string `toml:"client_idle_timeout" json:"client_idle_timeout"`
 	BackendIdleTimeout       *string `toml:"backend_idle_timeout" json:"backend_idle_timeout"`
 	BackendConnectionTimeout *string `toml:"backend_connection_timeout" json:"backend_connection_timeout"`
+	ChinaIpdbPath            *string `toml:"china_ipdb_path" json:"china_ipdb_path"`
 }
 
 type Upstream []string
@@ -95,6 +96,7 @@ type Server struct {
 
 	LimitReconnectRate *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
 	LimitPeripRate     *LimitPeripRate     `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
+	LimitChinaAccess   []LimitChinaAccess  `toml:"limit_china_access" json:"limit_china_access"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
@@ -162,6 +164,16 @@ type LimitPeripRate struct {
 	Interval   string `toml:"interval" json:"interval"`
 	ReadBytes  uint   `toml:"readbytes" json:"readbytes"`
 	WriteBytes uint   `toml:"writebytes" json:"writebytes"`
+}
+
+/**
+ * filter limit_china_access configuration
+ */
+type LimitChinaAccess struct {
+	Area   string `toml:"area" json:"area"`
+	Region string `toml:"region" json:"region"`
+	Isp    string `toml:"isp" json:"isp"`
+	Access string `toml:"access" json:"access"`
 }
 
 /**

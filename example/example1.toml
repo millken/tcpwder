@@ -12,7 +12,7 @@ max_connections = 0
 client_idle_timeout = "0" 
 backend_idle_timeout = "0"
 backend_connection_timeout = "0"
-
+china_ipdb_path = ""
 
 [servers]
 
@@ -34,3 +34,7 @@ reconnects = 23333
 interval = "10s"
 readbytes = 10
 writebytes = 500
+
+[[servers.sample.limit_china_access]]
+isp = "dx"
+access = "allow"
