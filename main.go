@@ -84,11 +84,12 @@ func main() {
 	log.SetOutput(filter)
 	//log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	if *cfg.Defaults.ChinaIpdbPath != "" {
-		err = utils.LoadCNIpDB(*cfg.Defaults.ChinaIpdbPath)
+	if cfg.Defaults.ChinaIpdbPath != "" {
+		err = utils.LoadCNIpDB(cfg.Defaults.ChinaIpdbPath)
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Printf("[INFO] loading china ip")
 	}
 
 	// Start API

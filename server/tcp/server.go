@@ -175,7 +175,7 @@ func (this *Server) HandleClientConnect(ctx *core.TcpContext) {
 		return
 	}
 	if err := this.filter.HandleClientConnect(client); err != nil {
-		log.Printf("[WARN] handle client connect: %s", host)
+		log.Printf("[WARN] handle client connect: %s, %s", host, err)
 		client.Close()
 		return
 	}

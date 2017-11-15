@@ -12,7 +12,7 @@ max_connections = 0
 client_idle_timeout = "0" 
 backend_idle_timeout = "0"
 backend_connection_timeout = "0"
-china_ipdb_path = ""
+china_ipdb_path = "/run/media/millken/09a7d751-1ed0-48f0-9240-c67c262700dd/go/src/github.com/millken/go-ipdb/dbv2.dat"
 
 [servers]
 
@@ -25,6 +25,7 @@ upstream = [
   ]
 max_connections = 80
 #per_ip_connections = 5
+limit_china_access_default = "deny"
 
 [servers.sample.limit_reconnect_rate]
 interval = "3s"
@@ -36,5 +37,9 @@ readbytes = 10
 writebytes = 500
 
 [[servers.sample.limit_china_access]]
-isp = "dx"
+isp = "ip-lt"
+access = "deny"
+[[servers.sample.limit_china_access]]
+isp = "ip-lt"
+region="rn-beijing"
 access = "allow"

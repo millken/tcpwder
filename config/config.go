@@ -53,7 +53,7 @@ type ConnectionOptions struct {
 	ClientIdleTimeout        *string `toml:"client_idle_timeout" json:"client_idle_timeout"`
 	BackendIdleTimeout       *string `toml:"backend_idle_timeout" json:"backend_idle_timeout"`
 	BackendConnectionTimeout *string `toml:"backend_connection_timeout" json:"backend_connection_timeout"`
-	ChinaIpdbPath            *string `toml:"china_ipdb_path" json:"china_ipdb_path"`
+	ChinaIpdbPath            string  `toml:"china_ipdb_path" json:"china_ipdb_path"`
 }
 
 type Upstream []string
@@ -94,9 +94,10 @@ type Server struct {
 	// Filter limit_perip_connection_filter configuration
 	PerIpConnections *uint `toml:"per_ip_connections" json:"per_ip_connections"`
 
-	LimitReconnectRate *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
-	LimitPeripRate     *LimitPeripRate     `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
-	LimitChinaAccess   []LimitChinaAccess  `toml:"limit_china_access" json:"limit_china_access"`
+	LimitReconnectRate      *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
+	LimitPeripRate          *LimitPeripRate     `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
+	LimitChinaAccessDefault string              `toml:"limit_china_access_default" json:"limit_china_access_default"`
+	LimitChinaAccess        []LimitChinaAccess  `toml:"limit_china_access" json:"limit_china_access"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
