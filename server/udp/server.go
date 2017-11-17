@@ -9,6 +9,7 @@ import (
 	"github.com/millken/tcpwder/core"
 	"github.com/millken/tcpwder/server/scheduler"
 	"github.com/millken/tcpwder/server/upstream"
+	"github.com/millken/tcpwder/stats"
 	"github.com/millken/tcpwder/utils"
 )
 
@@ -27,6 +28,9 @@ type Server struct {
 
 	/* Scheduler */
 	scheduler scheduler.Scheduler
+
+	/* Stats handler */
+	statsHandler *stats.Handler
 
 	/* Server connection */
 	serverConn *net.UDPConn
@@ -61,16 +65,19 @@ type sessionResponse struct {
  */
 func New(name string, cfg config.Server) (*Server, error) {
 
+	statsHandler := stats.NewHandler(name)
 	server := &Server{
 		name: name,
 		cfg:  cfg,
 		scheduler: scheduler.Scheduler{
-			Balancer: balance.New(nil, cfg.Balance),
-			Upstream: upstream.New(cfg.Upstream),
+			Balancer:     balance.New(nil, cfg.Balance),
+			Upstream:     upstream.New(cfg.Upstream),
+			StatsHandler: statsHandler,
 		},
-		getOrCreate: make(chan *sessionRequest),
-		remove:      make(chan net.UDPAddr),
-		stop:        make(chan bool),
+		statsHandler: statsHandler,
+		getOrCreate:  make(chan *sessionRequest),
+		remove:       make(chan net.UDPAddr),
+		stop:         make(chan bool),
 	}
 
 	log.Printf("[INFO] Creating UDP server '%s': %s %s", name, cfg.Bind, cfg.Balance)
@@ -89,7 +96,7 @@ func (this *Server) Cfg() config.Server {
  */
 func (this *Server) Start() error {
 	this.scheduler.Start()
-
+	this.statsHandler.Start()
 	// Start listening
 	if err := this.listen(); err != nil {
 		this.Stop()
@@ -263,6 +270,7 @@ func (this *Server) Stop() {
 	this.stopped = true
 	this.serverConn.Close()
 
+	this.scheduler.Stop()
 	this.scheduler.Stop()
 	this.stop <- true
 }

@@ -1,0 +1,25 @@
+[api]
+enabled = true
+bind = ":8000"
+
+[logging]
+level = "info"
+output = "stdout" 
+
+#
+[defaults]
+max_connections = 0
+client_idle_timeout = "0" 
+backend_idle_timeout = "0"
+backend_connection_timeout = "0"
+
+[servers]
+
+
+[servers.sample]
+protocol = "udp"
+bind = "localhost:53"
+upstream = [
+      "8.8.8.8:53",
+	  "1.2.4.8:53"
+  ]

@@ -101,11 +101,22 @@ func (this *Scheduler) Start() {
 		for {
 			select {
 
+			/* ----- stats ----- */
+
+			// push current backends to stats handler
+			case <-backendsPushTicker.C:
+				this.StatsHandler.Backends <- this.Backends()
+
+			// handle new bandwidth stats of a backend
+			case bs := <-this.StatsHandler.BackendsCounter.Out:
+				this.HandleBackendStatsChange(bs.Target, &bs)
+
 			/* ----- upstream----- */
 
 			// handle newly discovered backends
 			case backends := <-this.Upstream.Discover():
 				this.HandleBackendsUpdate(backends)
+				this.StatsHandler.BackendsCounter.In <- this.Targets()
 
 			// handle backend operation
 			case op := <-this.ops:
