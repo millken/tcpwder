@@ -83,6 +83,10 @@ func (this *LimitChinaAccessFilter) Read(client net.Conn, rwc core.ReadWriteCoun
 func (this *LimitChinaAccessFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
+func (this *LimitChinaAccessFilter) Request(buf []byte) error {
+	return nil
+}
+
 func (this *LimitChinaAccessFilter) Stop() {
 }
 

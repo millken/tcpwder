@@ -61,6 +61,10 @@ func (this *LimitReconnectRateFilter) Read(client net.Conn, rwc core.ReadWriteCo
 func (this *LimitReconnectRateFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
+func (this *LimitReconnectRateFilter) Request(buf []byte) error {
+	return nil
+}
+
 func (this *LimitReconnectRateFilter) Stop() {
 	close(this.stop)
 }

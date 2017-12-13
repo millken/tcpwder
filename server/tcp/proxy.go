@@ -22,7 +22,7 @@ const (
  * Perform copy/proxy data from 'from' to 'to' socket, counting r/w stats and
  * dropping connection if timeout exceeded
  */
-func proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWriteCount {
+func (this *Server) proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWriteCount {
 
 	stats := make(chan core.ReadWriteCount)
 	outStats := make(chan core.ReadWriteCount)
@@ -75,7 +75,7 @@ func proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWr
 
 	// Run proxy copier
 	go func() {
-		err := Copy(to, from, stats)
+		err := this.Copy(to, from, stats)
 		// hack to determine normal close. TODO: fix when it will be exposed in golang
 		e, ok := err.(*net.OpError)
 		if err != nil && (!ok || e.Err.Error() != "use of closed network connection") {
@@ -95,7 +95,7 @@ func proxy(to net.Conn, from net.Conn, timeout time.Duration) <-chan core.ReadWr
 /**
  * It's build by analogy of io.Copy
  */
-func Copy(to io.Writer, from io.Reader, ch chan<- core.ReadWriteCount) error {
+func (this *Server) Copy(to io.Writer, from io.Reader, ch chan<- core.ReadWriteCount) error {
 
 	buf := make([]byte, BUFFER_SIZE)
 	var err error = nil
@@ -104,6 +104,9 @@ func Copy(to io.Writer, from io.Reader, ch chan<- core.ReadWriteCount) error {
 		readN, readErr := from.Read(buf)
 
 		if readN > 0 {
+			if err = this.filter.HandleClientRequest(buf); err != nil {
+				return err
+			}
 
 			writeN, writeErr := to.Write(buf[0:readN])
 

@@ -48,6 +48,10 @@ func (this *LimitPerIPConnectionFilter) Read(client net.Conn, rwc core.ReadWrite
 func (this *LimitPerIPConnectionFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
+func (this *LimitPerIPConnectionFilter) Request(buf []byte) error {
+	return nil
+}
+
 func (this *LimitPerIPConnectionFilter) Stop() {
 }
 

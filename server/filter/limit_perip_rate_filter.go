@@ -74,6 +74,10 @@ func (this *LimitPeripRateFilter) Write(client net.Conn, rwc core.ReadWriteCount
 	}
 }
 
+func (this *LimitPeripRateFilter) Request(buf []byte) error {
+	return nil
+}
+
 func (this *LimitPeripRateFilter) Stop() {
 	close(this.stop)
 }

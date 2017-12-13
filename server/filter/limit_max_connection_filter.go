@@ -40,6 +40,10 @@ func (this *LimitMaxConnectionFilter) Read(client net.Conn, rwc core.ReadWriteCo
 func (this *LimitMaxConnectionFilter) Write(client net.Conn, rwc core.ReadWriteCount) {
 }
 
+func (this *LimitMaxConnectionFilter) Request(buf []byte) error {
+	return nil
+}
+
 func (this *LimitMaxConnectionFilter) Stop() {
 }
 

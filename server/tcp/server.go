@@ -319,8 +319,8 @@ func (this *Server) handle(ctx *core.TcpContext) {
 
 	/* Stat proxying */
 	log.Printf("[DEBUG] Begin %s%s%s%s%s", clientConn.RemoteAddr(), " -> ", this.listener.Addr(), " -> ", backendConn.RemoteAddr())
-	cs := proxy(clientConn, backendConn, utils.ParseDurationOrDefault(*this.cfg.BackendIdleTimeout, 0))
-	bs := proxy(backendConn, clientConn, utils.ParseDurationOrDefault(*this.cfg.ClientIdleTimeout, 0))
+	cs := this.proxy(clientConn, backendConn, utils.ParseDurationOrDefault(*this.cfg.BackendIdleTimeout, 0))
+	bs := this.proxy(backendConn, clientConn, utils.ParseDurationOrDefault(*this.cfg.ClientIdleTimeout, 0))
 
 	isTx, isRx := true, true
 	ticker := time.NewTicker(1 * time.Second)

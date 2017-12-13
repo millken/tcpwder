@@ -94,10 +94,12 @@ type Server struct {
 	// Filter limit_perip_connection_filter configuration
 	PerIpConnections *uint `toml:"per_ip_connections" json:"per_ip_connections"`
 
-	LimitReconnectRate      *LimitReconnectRate `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
-	LimitPeripRate          *LimitPeripRate     `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
-	LimitChinaAccessDefault string              `toml:"limit_china_access_default" json:"limit_china_access_default"`
-	LimitChinaAccess        []LimitChinaAccess  `toml:"limit_china_access" json:"limit_china_access"`
+	LimitReconnectRate          *LimitReconnectRate    `toml:"limit_reconnect_rate" json:"limit_reconnect_rate"`
+	LimitPeripRate              *LimitPeripRate        `toml:"limit_per_ip_rate" json:"limit_per_ip_rate"`
+	LimitChinaAccessDefault     string                 `toml:"limit_china_access_default" json:"limit_china_access_default"`
+	LimitChinaAccess            []LimitChinaAccess     `toml:"limit_china_access" json:"limit_china_access"`
+	FilterRequestContentDefault string                 `toml:"filter_request_content_default" json:"filter_request_content_default"`
+	FilterRequestContent        []FilterRequestContent `toml:"filter_request_content" json:"filter_request_content"`
 
 	// Healthcheck configuration
 	Healthcheck *HealthcheckConfig `toml:"healthcheck" json:"healthcheck"`
@@ -175,6 +177,14 @@ type LimitChinaAccess struct {
 	Region string `toml:"region" json:"region"`
 	Isp    string `toml:"isp" json:"isp"`
 	Access string `toml:"access" json:"access"`
+}
+
+/**
+ * filter filter_request_content configuration
+ */
+type FilterRequestContent struct {
+	Content string `toml:"content" json:"content"`
+	Access  string `toml:"access" json:"access"`
 }
 
 /**

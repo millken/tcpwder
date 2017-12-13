@@ -14,6 +14,7 @@ type FilterInterface interface {
 	Connect(client net.Conn) error
 	Read(client net.Conn, rwc core.ReadWriteCount)
 	Write(client net.Conn, rwc core.ReadWriteCount)
+	Request([]byte) error
 	Disconnect(client net.Conn)
 	Stop()
 }
@@ -100,4 +101,13 @@ func (this *Filter) HandleClientRead(client net.Conn, rwc core.ReadWriteCount) {
 	for _, filter := range this.filters {
 		filter.Read(client, rwc)
 	}
+}
+
+func (this *Filter) HandleClientRequest(buf []byte) error {
+	for _, filter := range this.filters {
+		if err := filter.Request(buf); err != nil {
+			return err
+		}
+	}
+	return nil
 }
