@@ -2,9 +2,10 @@ package filter
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
-	"log"
 	"net"
+	"strings"
 
 	"github.com/millken/tcpwder/config"
 	"github.com/millken/tcpwder/core"
@@ -13,6 +14,7 @@ import (
 type FilterRequestContent struct {
 	frc           []config.FilterRequestContent
 	defaultAccess bool
+	client        net.Conn
 }
 
 func (this *FilterRequestContent) Init(cfg config.Server) bool {
@@ -26,6 +28,7 @@ func (this *FilterRequestContent) Init(cfg config.Server) bool {
 }
 
 func (this *FilterRequestContent) Connect(client net.Conn) error {
+	this.client = client
 	return nil
 }
 
@@ -42,19 +45,30 @@ func (this *FilterRequestContent) Request(buf []byte) error {
 	if len(bytes.TrimSpace(buf)) == 0 {
 		return nil
 	}
+	hit := false
 	for _, r := range this.frc {
-		log.Printf("b=%v, r.access=%s", bytes.Contains(buf, []byte(r.Content)), r.Access)
-		if bytes.Contains(buf, []byte(r.Content)) {
+		switch r.Mode {
+		case "hex":
+			src := hex.EncodeToString(buf)
+			if strings.Contains(src, r.Content) {
+				hit = true
+			}
+		default:
+			if bytes.Contains(buf, []byte(r.Content)) {
+				hit = true
+			}
+		}
+		if hit {
 			switch r.Access {
 			case "allow":
 				return nil
 			case "deny":
-				return fmt.Errorf("deny content")
+				return fmt.Errorf("deny by FilterRequestContent %s:%s", this.client.RemoteAddr().String(), r.Content)
 			}
 		}
 	}
 	if this.defaultAccess {
-		return fmt.Errorf("deny content default [%s]", buf)
+		return fmt.Errorf("deny content default")
 	}
 	return nil
 }

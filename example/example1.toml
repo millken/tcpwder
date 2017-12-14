@@ -26,7 +26,7 @@ upstream = [
 max_connections = 80
 #per_ip_connections = 5
 limit_china_access_default = "deny"
-filter_request_content_default = "deny"
+filter_request_content_default = "allow"
 
 [servers.sample.limit_reconnect_rate]
 interval = "3s"
@@ -34,7 +34,7 @@ reconnects = 23333
 
 [servers.sample.limit_per_ip_rate]
 interval = "1s"
-readbytes = 1000
+readbytes = 10000
 writebytes = 5000
 
 [[servers.sample.limit_china_access]]
@@ -46,5 +46,6 @@ region="rn-beijing"
 access = "allow"
 
 [[servers.sample.filter_request_content]]
-content = "HTTP"
-access = "allow"
+mode = "hex"
+content = "48545450"
+access = "deny"

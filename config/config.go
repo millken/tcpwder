@@ -183,6 +183,7 @@ type LimitChinaAccess struct {
  * filter filter_request_content configuration
  */
 type FilterRequestContent struct {
+	Mode    string `toml:"mode" json:"mode"`
 	Content string `toml:"content" json:"content"`
 	Access  string `toml:"access" json:"access"`
 }
